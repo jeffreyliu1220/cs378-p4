@@ -1,0 +1,16 @@
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.container {
+  margin: 10vw;
+  display: grid;
+  gap: 10px;
+}
+
+.retrieved-data {
+  clear: both;
+  display: inline-block;
+  width: 100%;
+}
