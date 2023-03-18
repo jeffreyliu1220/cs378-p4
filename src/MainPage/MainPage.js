@@ -1,29 +1,103 @@
-import "./styles.css";
-import { useState } from "react";
+import Button from 'react-bootstrap/Button';
+import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
+import {useNavigate} from "react-router-dom"
+import {useState, useEffect} from "react"
 import {
   TextField,
-  Button,
   Select,
   MenuItem,
   InputLabel,
   FormControl
 } from "@mui/material";
 
-const databaseURL = "https://cs378-24067-default-rtdb.firebaseio.com/";
+const databaseURL =
+  "https://human-computer-interacti-bc357-default-rtdb.firebaseio.com/";
 
-export default function App() {
+
+
+export default function MainPage(){
+    const auth = getAuth();
+    let user = auth.currentUser;
+    console.log(user);
+    console.log("MAIN PAGE USER: ", user?.email);
+
+    useEffect(() => {
+      const auth = getAuth();
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+            user = auth.currentUser;
+            console.log("AHHHHHHHHHHH USER:", user);
+        }
+        else{
+            //Navigate back if refresh logged out?
+            consolee.log("AHHHHHHHHHHHHHHHH NOTHING????")
+            const navigate = useNavigate();
+            navigate("/");
+        }
+      });
+    }, [])
+
+    return(
+        <>
+        <div>
+            Hello: {user?.email}!
+        </div>
+        
+        <Logout></Logout>
+        <Form></Form>
+        </>
+    )
+
+}
+
+function Logout(){
+    const navigate = useNavigate();
+    
+    //Logout and navigate back to login page
+    const handleLogout = () =>{
+        const auth = getAuth();
+        signOut(auth).then(() => {
+            // Sign-out successful.
+            console.log("LOGGING OUT");
+            navigate("/");
+        }).catch((error) => {
+            // An error happened.
+            console.log("ERROR LOGGING OUT");
+        });
+    }
+
+    return(
+        <>
+            <Button onClick={handleLogout}>Logout</Button>
+        </>
+    )
+}
+
+
+
+function Form() {
   const [firstInputValue, setFirstInputValue] = useState(null);
   const [secondInputValue, setSecondInputValue] = useState(null);
   const [dataPostResult, setDataPostResult] = useState(null);
   const [dataRetrieveResult, setDataRetrieveResult] = useState(null);
-  const [postType, setPostType] = useState(null);
   const [retrieveType, setRetrieveType] = useState(null);
+  const [user, setUser] = useState(null);
+//TODO: If not logged log back in wiht user creds????
+    //If user is already logged in just go straight to main page
+    useEffect(() => {
+      const auth = getAuth();
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+            setUser(user)
+        } 
+      });
+    })
 
   const sendData = () => {
     setFirstInputValue("");
-    setPostType(null);
+    setUser(null);
     const sampleDict = {
-      type: postType,
+      user: user.email,
       date: new Date(),
       text: firstInputValue
     };
@@ -55,12 +129,13 @@ export default function App() {
         }
       })
       .then((res) => {
+        //Filter if user matches curr user
         if (res) {
           const keys = Object.keys(res);
           console.log(res);
           const dataPoints = keys
             .map((k) => res[k])
-            .filter((e) => e["type"] === retrieveType);
+            .filter((e) => e["user"] === user.email);
           setSecondInputValue(dataPoints);
         }
       });
@@ -72,12 +147,6 @@ export default function App() {
     console.log(target.value);
   };
 
-  const handlePostTypeChange = (event) => {
-    const target = event.target;
-    setPostType(target.value);
-    console.log(target.value);
-  };
-
   const handleRetrieveTypeChange = (event) => {
     const target = event.target;
     setRetrieveType(target.value);
@@ -86,7 +155,7 @@ export default function App() {
 
   return (
     <div className="App">
-      <h1>React + Firebase Tutorial</h1>
+      <h1>Modified React + Firebase Tutorial</h1>
       <h2>CS378 23Spring P4</h2>
       <div className="container">
         <TextField
@@ -97,41 +166,13 @@ export default function App() {
           onChange={handleInputChange}
           variant="outlined"
         />
-        <FormControl fullWidth>
-          <InputLabel id="demo-simple-select-label">Category</InputLabel>
-          <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            value={postType}
-            label="Category"
-            onChange={handlePostTypeChange}
-          >
-            <MenuItem value={"A"}>A</MenuItem>
-            <MenuItem value={"B"}>B</MenuItem>
-            <MenuItem value={"C"}>C</MenuItem>
-          </Select>
-        </FormControl>
-        <Button variant="contained" onClick={() => sendData()}>
+        <Button onClick={() => sendData()}>
           Send data
         </Button>
         <text>{dataPostResult}</text>
       </div>
       <div className="container">
-        <FormControl fullWidth>
-          <InputLabel id="demo-simple-select-label">Category</InputLabel>
-          <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            value={retrieveType}
-            label="Category"
-            onChange={handleRetrieveTypeChange}
-          >
-            <MenuItem value={"A"}>A</MenuItem>
-            <MenuItem value={"B"}>B</MenuItem>
-            <MenuItem value={"C"}>C</MenuItem>
-          </Select>
-        </FormControl>
-        <Button variant="contained" onClick={() => getData()}>
+        <Button onClick={() => getData()}>
           Retrieve data
         </Button>
         <text>{dataRetrieveResult}</text>
@@ -147,7 +188,7 @@ export default function App() {
                 </span>
               );
             })
-          : "No data with category " + retrieveType}
+          : "Waiting to retrieve data"}
       </div>
     </div>
   );
