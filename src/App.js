@@ -9,7 +9,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 export default function App() {
   return(
     <>
-    <Router>
+    <Router basename="/cs378-p4">
       <Routes>
         <Route exact path="/" element={<Login/>} />
         <Route exact path="/MainPage" element={<MainPage/>} />
